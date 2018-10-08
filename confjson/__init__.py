@@ -60,6 +60,8 @@ class Config:
             if key not in self._default_dict
             or value != self._default_dict[key]
         }
-        if diff or self.user_config_path.exists():
+        if diff: 
             with self.user_config_path.open(mode="w") as file:
-                json.dump(diff, file)
+                json.dump(diff, file, indent=4, sort_keys=True)
+        elif self.user_config_path.exists():
+            self.user_config_path.unlink()
