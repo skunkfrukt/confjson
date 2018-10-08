@@ -227,18 +227,6 @@ def test_create_no_user_config_file_if_default_values_unchanged(tmpdir):
     assert not conf.user_config_path.exists()
 
 
-def test_empty_existing_user_config_file_if_default_values_unchanged(tmpdir):
-    _generate_default_config(tmpdir)
-    conf = confjson.Config(tmpdir)
-    with conf.user_config_path.open("w") as file:
-        file.write("")
-    conf["string_in_default"] = DEFAULT_CONFIG["string_in_default"]
-    conf.save()
-    with conf.user_config_path.open() as file:
-        json_from_user_config_file = json.load(file)
-    assert json_from_user_config_file == {}
-
-
 def test_remove_items_from_user_config_if_identical_to_default_config(tmpdir):
     _generate_both_config_files(tmpdir)
     conf = confjson.Config(tmpdir)
@@ -248,3 +236,12 @@ def test_remove_items_from_user_config_if_identical_to_default_config(tmpdir):
     with conf.user_config_path.open() as file:
         json_from_user_config_file = json.load(file)
     assert "string_in_both" not in json_from_user_config_file
+
+
+def test_delete_user_config_file_on_save_if_identical_to_default(tmpdir):
+    _generate_both_config_files(tmpdir)
+    conf = confjson.Config(tmpdir)
+    conf._user_dict = json.loads(json.dumps(conf._default_dict))
+    assert conf.user_config_path.exists()
+    conf.save()
+    assert not conf.user_config_path.exists()
