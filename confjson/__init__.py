@@ -1,3 +1,7 @@
+"""confjson
+A bafflingly simple, JSON-backend configuration manager for python programs.
+"""
+
 import json
 import pathlib
 
@@ -7,6 +11,8 @@ USER_CONFIG_FILENAME = "user.config.json"
 
 
 class Config:
+    """A manager for JSON-backed default and user-specified config settings."""
+
     def __init__(self, path):
         pathlib_path = pathlib.Path(path)
 
@@ -30,7 +36,8 @@ class Config:
         self._default_dict = {}
         self._user_dict = {}
 
-        self.load()
+    def __contains__(self, key):
+        return key in self._user_dict or key in self._default_dict
 
     def __getitem__(self, key):
         if key not in self._user_dict:
@@ -41,7 +48,25 @@ class Config:
     def __setitem__(self, key, value):
         self._user_dict[key] = value
 
+    def get(self, key, default=None):
+        """Get the value of the given key from the user config, the
+        default config or the optional `default` argument, in order of
+        preference.
+        """
+        try:
+            return self[key]
+        except KeyError:
+            return default
+
+    def __len__(self):
+        return len(set(self._user_dict).union(set(self._default_dict)))
+
     def load(self):
+        """Load or reload config settings from the backing JSON files.
+        Note that this will reset any unsaved user config settings.
+        `load()` returns the Config object to facilitate assignment and
+        loading in a single line.
+        """
         try:
             with self.default_config_path.open() as file:
                 self._default_dict = json.load(file)
@@ -54,13 +79,18 @@ class Config:
         except FileNotFoundError:
             self._user_dict = {}
 
+        return self
+
     def save(self):
+        """Save any user config settings that differ from their
+        respective default values.
+        """
         diff = {
             key: value for key, value in self._user_dict.items()
             if key not in self._default_dict
             or value != self._default_dict[key]
         }
-        if diff: 
+        if diff:
             with self.user_config_path.open(mode="w") as file:
                 json.dump(diff, file, indent=4, sort_keys=True)
         elif self.user_config_path.exists():
