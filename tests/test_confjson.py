@@ -252,10 +252,11 @@ def test_save_only_changed_items_in_nested_dicts(tmpdir):
     conf = confjson.Config(tmpdir)
     conf["dict_in_default"]["key_added_to_user"] = "krafs"
     conf.save()
-    conf.load()
-    assert "dict_in_default" in conf._user_dict
-    assert len(conf._user_dict["dict_in_default"]) == 1
-    assert conf._user_dict["dict_in_default"]["key_added_to_user"] == "krafs"
+    with conf.user_config_path.open() as file:
+        user_json = json.load(file)
+    assert "dict_in_default" in user_json
+    assert len(user_json["dict_in_default"]) == 1
+    assert user_json["dict_in_default"]["key_added_to_user"] == "krafs"
 
 
 def test_access_nested_dicts_missing_in_user_but_present_in_default(tmpdir):

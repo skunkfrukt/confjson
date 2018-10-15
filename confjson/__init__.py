@@ -2,6 +2,7 @@
 A bafflingly simple, JSON-backend configuration manager for python programs.
 """
 
+import copy
 import json
 import pathlib
 
@@ -73,7 +74,8 @@ class Config:
 
         try:
             with self.user_config_path.open() as file:
-                self._user_dict = json.load(file)
+                self._user_dict = _get_dict_union(
+                    json.load(file), self._default_dict)
         except FileNotFoundError:
             self._user_dict = {}
 
@@ -81,8 +83,7 @@ class Config:
         """Save any user config settings that differ from their
         respective default values.
         """
-        diff = _get_dict_diff_in_a_recursive_manner(
-            self._user_dict, self._default_dict)
+        diff = _get_dict_diff(self._user_dict, self._default_dict)
         if diff:
             with self.user_config_path.open(mode="w") as file:
                 json.dump(diff, file, indent=4, sort_keys=True)
@@ -90,7 +91,7 @@ class Config:
             self.user_config_path.unlink()
 
 
-def _get_dict_diff_in_a_recursive_manner(top_dict, bottom_dict):
+def _get_dict_diff(top_dict, bottom_dict):
     result_dict = {}
     for key, top_value in top_dict.items():
         if key in bottom_dict:
@@ -98,10 +99,26 @@ def _get_dict_diff_in_a_recursive_manner(top_dict, bottom_dict):
             if top_value != bottom_value:
                 if (isinstance(top_value, dict)
                         and isinstance(bottom_value, dict)):
-                    result_dict[key] = _get_dict_diff_in_a_recursive_manner(
-                        top_value, bottom_value)
+                    result_dict[key] = _get_dict_diff(top_value, bottom_value)
                 else:
                     result_dict[key] = top_value
         else:
             result_dict[key] = top_value
+    return result_dict
+
+
+def _get_dict_union(top_dict, bottom_dict):
+    result_dict = {}
+    for key in set(top_dict.keys()).union(bottom_dict.keys()):
+        if key in top_dict:
+            top_value = top_dict[key]
+            if (isinstance(top_value, dict) and key in bottom_dict
+                    and isinstance(bottom_dict[key], dict)):
+                result_dict[key] = _get_dict_union(top_value, bottom_dict[key])
+            elif isinstance(top_value, (dict, list)):
+                result_dict[key] = json.loads(json.dumps(top_value))
+            else:
+                result_dict[key] = top_value
+        else:
+            result_dict[key] = json.loads(json.dumps(bottom_dict[key]))
     return result_dict
