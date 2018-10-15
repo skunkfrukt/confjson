@@ -20,12 +20,12 @@ The `confjson.Config` class is similar to a ChainMap, and works by means of two 
 
 ### Initialization
 ```python
-config = confjson.Config(MY_DIR).load()
+config = confjson.Config(MY_DIR)
 
 # If the supplied path refers to a file, confjson will look for config
 # files in the containing directory.
 # This is mainly to enable the following pattern, using __file__.
-configer = confjson.Config(__file__).load()
+configer = confjson.Config(__file__)
 ```
 
 ### Data access
@@ -39,7 +39,7 @@ if "username" in configest["user"]:
 ### Persistence
 ```python
 # The load() method (re-)loads the Config object with values from the
-# backing JSON files.
+# backing JSON files. Loading is also performed on initialization.
 config.load()
 
 # The save() method saves any changed or added items **to user.config.json only**.

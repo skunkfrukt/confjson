@@ -35,6 +35,7 @@ class Config:
 
         self._default_dict = {}
         self._user_dict = {}
+        self.load()
 
     def __contains__(self, key):
         return key in self._user_dict or key in self._default_dict
@@ -64,8 +65,6 @@ class Config:
     def load(self):
         """Load or reload config settings from the backing JSON files.
         Note that this will reset any unsaved user config settings.
-        `load()` returns the Config object to facilitate assignment and
-        loading in a single line.
         """
         try:
             with self.default_config_path.open() as file:
@@ -78,8 +77,6 @@ class Config:
                 self._user_dict = json.load(file)
         except FileNotFoundError:
             self._user_dict = {}
-
-        return self
 
     def save(self):
         """Save any user config settings that differ from their
