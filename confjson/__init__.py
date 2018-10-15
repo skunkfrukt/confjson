@@ -42,8 +42,7 @@ class Config:
 
     def __getitem__(self, key):
         if key not in self._user_dict:
-            default_value = self._default_dict[key]
-            self._user_dict[key] = json.loads(json.dumps(default_value))
+            self._user_dict[key] = copy.deepcopy(self._default_dict[key])
         return self._user_dict[key]
 
     def __setitem__(self, key, value):
@@ -115,10 +114,8 @@ def _get_dict_union(top_dict, bottom_dict):
             if (isinstance(top_value, dict) and key in bottom_dict
                     and isinstance(bottom_dict[key], dict)):
                 result_dict[key] = _get_dict_union(top_value, bottom_dict[key])
-            elif isinstance(top_value, (dict, list)):
-                result_dict[key] = json.loads(json.dumps(top_value))
             else:
-                result_dict[key] = top_value
+                result_dict[key] = copy.deepcopy(top_value)
         else:
-            result_dict[key] = json.loads(json.dumps(bottom_dict[key]))
+            result_dict[key] = copy.deepcopy(bottom_dict[key])
     return result_dict
