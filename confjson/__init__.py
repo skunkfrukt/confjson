@@ -5,7 +5,6 @@ A bafflingly simple, JSON-backend configuration manager for python programs.
 import json
 import pathlib
 
-
 DEFAULT_CONFIG_FILENAME = "default.config.json"
 USER_CONFIG_FILENAME = "user.config.json"
 
@@ -83,9 +82,9 @@ class Config:
         respective default values.
         """
         diff = {
-            key: value for key, value in self._user_dict.items()
-            if key not in self._default_dict
-            or value != self._default_dict[key]
+            key: value
+            for key, value in self._user_dict.items() if
+            key not in self._default_dict or value != self._default_dict[key]
         }
         if diff:
             with self.user_config_path.open(mode="w") as file:

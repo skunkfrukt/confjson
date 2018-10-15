@@ -141,8 +141,8 @@ def test_add_item_to_list_present_in_both_configs(tmpdir):
     conf = confjson.Config(tmpdir)
     conf["list_in_both"].append("new_item")
     assert (
-        conf._user_dict["list_in_both"]
-        == USER_CONFIG["list_in_both"] + ["new_item"])
+        conf._user_dict["list_in_both"] == USER_CONFIG["list_in_both"] +
+        ["new_item"])
     assert (
         conf._default_dict["list_in_both"] == DEFAULT_CONFIG["list_in_both"])
 
@@ -152,8 +152,8 @@ def test_add_item_to_list_present_only_in_user_config(tmpdir):
     conf = confjson.Config(tmpdir)
     conf["list_in_user"].append("new_item")
     assert (
-        conf._user_dict["list_in_user"]
-        == USER_CONFIG["list_in_user"] + ["new_item"])
+        conf._user_dict["list_in_user"] == USER_CONFIG["list_in_user"] +
+        ["new_item"])
     assert "list_in_user" not in conf._default_dict
 
 
@@ -162,35 +162,35 @@ def test_add_item_to_list_present_only_in_default_config(tmpdir):
     conf = confjson.Config(tmpdir)
     conf["list_in_default"].append("new_item")
     assert (
-        conf._user_dict["list_in_default"]
-        == DEFAULT_CONFIG["list_in_default"] + ["new_item"])
+        conf._user_dict["list_in_default"] == DEFAULT_CONFIG["list_in_default"]
+        + ["new_item"])
     assert (
-        conf._default_dict["list_in_default"]
-        == DEFAULT_CONFIG["list_in_default"])
+        conf._default_dict["list_in_default"] ==
+        DEFAULT_CONFIG["list_in_default"])
 
 
 def test_get_item_from_dict_present_in_both_configs(tmpdir):
     _generate_both_config_files(tmpdir)
     conf = confjson.Config(tmpdir)
     assert (
-        conf["dict_in_both"]["key_in_both"]
-        == USER_CONFIG["dict_in_both"]["key_in_both"])
+        conf["dict_in_both"]["key_in_both"] == USER_CONFIG["dict_in_both"]
+        ["key_in_both"])
 
 
 def test_get_item_from_dict_present_only_in_default_config(tmpdir):
     _generate_both_config_files(tmpdir)
     conf = confjson.Config(tmpdir)
     assert (
-        conf["dict_in_default"]["key_d1"]
-        == DEFAULT_CONFIG["dict_in_default"]["key_d1"])
+        conf["dict_in_default"]["key_d1"] == DEFAULT_CONFIG["dict_in_default"]
+        ["key_d1"])
 
 
 def test_get_item_from_dict_present_only_in_user_config(tmpdir):
     _generate_both_config_files(tmpdir)
     conf = confjson.Config(tmpdir)
     assert (
-        conf["dict_in_user"]["key_u1"]
-        == USER_CONFIG["dict_in_user"]["key_u1"])
+        conf["dict_in_user"]["key_u1"] == USER_CONFIG["dict_in_user"]["key_u1"]
+    )
 
 
 def test_add_item_to_dict_present_in_both_configs(tmpdir):
@@ -215,8 +215,8 @@ def test_add_item_to_dict_present_only_in_default_config(tmpdir):
     conf["dict_in_default"]["new_key"] = "new_value"
     assert conf._user_dict["dict_in_default"]["new_key"] == "new_value"
     assert (
-        conf._default_dict["dict_in_default"]
-        == DEFAULT_CONFIG["dict_in_default"])
+        conf._default_dict["dict_in_default"] ==
+        DEFAULT_CONFIG["dict_in_default"])
 
 
 def test_create_no_user_config_file_if_default_values_unchanged(tmpdir):
