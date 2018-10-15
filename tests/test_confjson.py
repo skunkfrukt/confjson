@@ -245,3 +245,142 @@ def test_delete_user_config_file_on_save_if_identical_to_default(tmpdir):
     assert conf.user_config_path.exists()
     conf.save()
     assert not conf.user_config_path.exists()
+
+
+def test_access_user_item_as_attribute(tmpdir):
+    _generate_both_config_files(tmpdir)
+    conf = confjson.Config(tmpdir)
+    assert conf.string_in_user == conf["string_in_user"]
+
+
+def test_access_user_item_overriding_default_as_attribute(tmpdir):
+    _generate_both_config_files(tmpdir)
+    conf = confjson.Config(tmpdir)
+    assert conf.string_in_both == conf["string_in_both"]
+
+
+def test_access_default_item_as_attribute(tmpdir):
+    _generate_both_config_files(tmpdir)
+    conf = confjson.Config(tmpdir)
+    assert conf.string_in_default == conf["string_in_default"]
+
+
+def test_access_user_list_as_attribute(tmpdir):
+    _generate_both_config_files(tmpdir)
+    conf = confjson.Config(tmpdir)
+    assert conf.list_in_user[0] == conf["list_in_user"][0]
+
+
+def test_access_user_list_overriding_default_as_attribute(tmpdir):
+    _generate_both_config_files(tmpdir)
+    conf = confjson.Config(tmpdir)
+    assert conf.list_in_both[0] == conf["list_in_both"][0]
+
+
+def test_access_default_list_as_attribute(tmpdir):
+    _generate_both_config_files(tmpdir)
+    conf = confjson.Config(tmpdir)
+    assert conf.list_in_default[0] == conf["list_in_default"][0]
+
+
+def test_access_user_dict_as_attribute(tmpdir):
+    _generate_both_config_files(tmpdir)
+    conf = confjson.Config(tmpdir)
+    assert conf.dict_in_user.key_u1 == conf["dict_in_user"]["key_u1"]
+
+
+def test_access_user_dict_overriding_default_as_attribute(tmpdir):
+    _generate_both_config_files(tmpdir)
+    conf = confjson.Config(tmpdir)
+    assert (
+        conf.dict_in_both.key_in_both == conf["dict_in_both"]["key_in_both"])
+
+
+def test_access_default_dict_as_attribute(tmpdir):
+    _generate_both_config_files(tmpdir)
+    conf = confjson.Config(tmpdir)
+    assert conf.dict_in_default.key_d1 == conf["dict_in_default"]["key_d1"]
+
+
+def test_access_default_nested_dict_as_attribute(tmpdir):
+    _generate_both_config_files(tmpdir)
+    conf = confjson.Config(tmpdir)
+    assert (
+        conf.dict_in_both.key_in_default == conf["dict_in_both"]
+        ["key_in_default"])
+
+
+def test_set_user_item_as_attribute(tmpdir):
+    _generate_both_config_files(tmpdir)
+    conf = confjson.Config(tmpdir)
+    conf.string_in_user = "new_value"
+    assert "new_value" == conf["string_in_user"]
+
+
+def test_set_user_item_overriding_default_as_attribute(tmpdir):
+    _generate_both_config_files(tmpdir)
+    conf = confjson.Config(tmpdir)
+    conf.string_in_both = "new_value"
+    assert "new_value" == conf["string_in_both"]
+
+
+def test_set_default_item_as_attribute(tmpdir):
+    _generate_both_config_files(tmpdir)
+    conf = confjson.Config(tmpdir)
+    conf.string_in_default = "new_value"
+    assert "new_value" == conf["string_in_default"]
+
+
+def test_set_user_list_as_attribute(tmpdir):
+    _generate_both_config_files(tmpdir)
+    conf = confjson.Config(tmpdir)
+    conf.list_in_user[0] = "new_value_0"
+    conf.list_in_user.append("new_value_-1")
+    assert "new_value_0" == conf["list_in_user"][0]
+    assert "new_value_-1" == conf["list_in_user"][-1]
+
+
+def test_set_user_list_overriding_default_as_attribute(tmpdir):
+    _generate_both_config_files(tmpdir)
+    conf = confjson.Config(tmpdir)
+    conf.list_in_both[0] = "new_value_0"
+    conf.list_in_both.append("new_value_-1")
+    assert "new_value_0" == conf["list_in_both"][0]
+    assert "new_value_-1" == conf["list_in_both"][-1]
+
+
+def test_set_default_list_as_attribute(tmpdir):
+    _generate_both_config_files(tmpdir)
+    conf = confjson.Config(tmpdir)
+    conf.list_in_default[0] = "new_value_0"
+    conf.list_in_default.append("new_value_-1")
+    assert "new_value_0" == conf["list_in_default"][0]
+    assert "new_value_-1" == conf["list_in_default"][-1]
+
+
+def test_set_user_dict_as_attribute(tmpdir):
+    _generate_both_config_files(tmpdir)
+    conf = confjson.Config(tmpdir)
+    conf.dict_in_user.key_u1 = "new_value"
+    assert "new_value" == conf["dict_in_user"]["key_u1"]
+
+
+def test_set_user_dict_overriding_default_as_attribute(tmpdir):
+    _generate_both_config_files(tmpdir)
+    conf = confjson.Config(tmpdir)
+    conf.dict_in_both.key_in_both = "new_value"
+    assert ("new_value" == conf["dict_in_both"]["key_in_both"])
+
+
+def test_set_default_dict_as_attribute(tmpdir):
+    _generate_both_config_files(tmpdir)
+    conf = confjson.Config(tmpdir)
+    conf.dict_in_default.key_d1 = "new_value"
+    assert "new_value" == conf["dict_in_default"]["key_d1"]
+
+
+def test_set_default_nested_dict_as_attribute(tmpdir):
+    _generate_both_config_files(tmpdir)
+    conf = confjson.Config(tmpdir)
+    conf.dict_in_both.key_in_default = "new_value"
+    assert ("new_value" == conf["dict_in_both"]["key_in_default"])
