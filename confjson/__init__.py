@@ -81,13 +81,27 @@ class Config:
         """Save any user config settings that differ from their
         respective default values.
         """
-        diff = {
-            key: value
-            for key, value in self._user_dict.items() if
-            key not in self._default_dict or value != self._default_dict[key]
-        }
+        diff = _get_dict_diff_in_a_recursive_manner(
+            self._user_dict, self._default_dict)
         if diff:
             with self.user_config_path.open(mode="w") as file:
                 json.dump(diff, file, indent=4, sort_keys=True)
         elif self.user_config_path.exists():
             self.user_config_path.unlink()
+
+
+def _get_dict_diff_in_a_recursive_manner(top_dict, bottom_dict):
+    result_dict = {}
+    for key, top_value in top_dict.items():
+        if key in bottom_dict:
+            bottom_value = bottom_dict[key]
+            if top_value != bottom_value:
+                if (isinstance(top_value, dict)
+                        and isinstance(bottom_value, dict)):
+                    result_dict[key] = _get_dict_diff_in_a_recursive_manner(
+                        top_value, bottom_value)
+                else:
+                    result_dict[key] = top_value
+        else:
+            result_dict[key] = top_value
+    return result_dict
