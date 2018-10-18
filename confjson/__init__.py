@@ -2,6 +2,7 @@
 A bafflingly simple, JSON-backend configuration manager for python programs.
 """
 
+import copy
 import json
 import pathlib
 
@@ -44,8 +45,7 @@ class Config:
 
     def __getitem__(self, key):
         if key not in self._user_dict:
-            default_value = self._default_dict[key]
-            self._user_dict[key] = json.loads(json.dumps(default_value))
+            self._user_dict[key] = copy.deepcopy(self._default_dict[key])
         return self._user_dict[key]
 
     def __len__(self):
@@ -85,7 +85,8 @@ class Config:
 
         try:
             with self.user_config_path.open() as file:
-                self._user_dict = json.load(file)
+                self._user_dict = _get_dict_union(
+                    json.load(file), self._default_dict)
         except FileNotFoundError:
             self._user_dict = {}
 
@@ -93,13 +94,40 @@ class Config:
         """Save any user config settings that differ from their
         respective default values.
         """
-        diff = {
-            key: value
-            for key, value in self._user_dict.items() if
-            key not in self._default_dict or value != self._default_dict[key]
-        }
+        diff = _get_dict_diff(self._user_dict, self._default_dict)
         if diff:
             with self.user_config_path.open(mode="w") as file:
                 json.dump(diff, file, indent=4, sort_keys=True)
         elif self.user_config_path.exists():
             self.user_config_path.unlink()
+
+
+def _get_dict_diff(top_dict, bottom_dict):
+    result_dict = {}
+    for key, top_value in top_dict.items():
+        if key in bottom_dict:
+            bottom_value = bottom_dict[key]
+            if top_value != bottom_value:
+                if (isinstance(top_value, dict)
+                        and isinstance(bottom_value, dict)):
+                    result_dict[key] = _get_dict_diff(top_value, bottom_value)
+                else:
+                    result_dict[key] = top_value
+        else:
+            result_dict[key] = top_value
+    return result_dict
+
+
+def _get_dict_union(top_dict, bottom_dict):
+    result_dict = {}
+    for key in set(top_dict.keys()).union(bottom_dict.keys()):
+        if key in top_dict:
+            top_value = top_dict[key]
+            if (isinstance(top_value, dict) and key in bottom_dict
+                    and isinstance(bottom_dict[key], dict)):
+                result_dict[key] = _get_dict_union(top_value, bottom_dict[key])
+            else:
+                result_dict[key] = copy.deepcopy(top_value)
+        else:
+            result_dict[key] = copy.deepcopy(bottom_dict[key])
+    return result_dict

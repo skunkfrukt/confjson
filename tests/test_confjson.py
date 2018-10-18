@@ -253,3 +253,23 @@ def test_delete_user_config_file_on_save_if_identical_to_default(tmpdir):
     assert conf.user_config_path.exists()
     conf.save()
     assert not conf.user_config_path.exists()
+
+
+def test_save_only_changed_items_in_nested_dicts(tmpdir):
+    _generate_both_config_files(tmpdir)
+    conf = confjson.Config(tmpdir)
+    conf["dict_in_default"]["key_added_to_user"] = "krafs"
+    conf.save()
+    with conf.user_config_path.open() as file:
+        user_json = json.load(file)
+    assert "dict_in_default" in user_json
+    assert len(user_json["dict_in_default"]) == 1
+    assert user_json["dict_in_default"]["key_added_to_user"] == "krafs"
+
+
+def test_access_nested_dicts_missing_in_user_but_present_in_default(tmpdir):
+    _generate_both_config_files(tmpdir)
+    conf = confjson.Config(tmpdir)
+    assert (
+        conf["dict_in_both"]["key_in_default"] ==
+        DEFAULT_CONFIG["dict_in_both"]["key_in_default"])

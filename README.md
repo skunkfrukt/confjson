@@ -19,30 +19,26 @@ The `confjson.Config` class is similar to a ChainMap, and works by means of two 
   - This file should probably be added to .gitignore or such.
 
 ### Initialization
+The path given when initializing the Config object can be either a directory or a file. If it refers to a file, confjson will look for config files in the containing directory. The reason for this is that it enables the following pattern, using `__file__` to find config files in the same directory as the program.
 ```python
-config = confjson.Config(MY_DIR)
-
-# If the supplied path refers to a file, confjson will look for config
-# files in the containing directory.
-# This is mainly to enable the following pattern, using __file__.
-configer = confjson.Config(__file__)
+config = confjson.Config(__file__)
 ```
 
 ### Data access
+Items in the confjson config are accessed as in a dict.
 ```python
-# Items in the confjson config are accessed as in a dict.
-if "username" in configest["user"]:
-	do_something(configest["user"]["username"])
-	configest["user"]["something_count"] += 1
+if "username" in config["user"]:
+	do_something(config["user"]["username"])
+	config["user"]["something_count"] += 1
 ```
 
 ### Persistence
+The load() method (re-)loads the Config object with values from the backing JSON files. Loading is also performed on initialization, so this is mainly for discarding changes.
 ```python
-# The load() method (re-)loads the Config object with values from the
-# backing JSON files. Loading is also performed on initialization.
 config.load()
-
-# The save() method saves any changed or added items **to user.config.json only**.
+```
+The save() method saves any changed or added items **to user.config.json only**.
+```python
 config.save()
 ```
 
@@ -58,9 +54,11 @@ chain_map["list_in_second_dict"].append(4)
 print(chain_map.maps[1])  # -> {'list_in_second_dict': [1, 2, 3, 4]}
 print(chain_map.maps[0])  # -> {}
 
-conf = confjson.Config(__file__)  # Assuming that our default.config.json contains {"list_in_default_config": [1, 2, 3]}
-print(conf._default_dict)  # -> {'list_in_default_config': [1, 2, 3]}
-print(conf._user_dict)  # -> {}
-conf["list_in_default_config"].append(4)
-print(conf._default_dict)  # -> {'list_in_default_config': [1, 2, 3]}
-print(conf._user_dict)  # -> {'list_in_default_config': [1, 2, 3, 4]}
+# Assuming that our default.config.json contains
+# {"list_in_default_config": [1, 2, 3]}
+config = confjson.Config(__file__)
+print(config._default_dict)  # -> {'list_in_default_config': [1, 2, 3]}
+print(config._user_dict)  # -> {}
+config["list_in_default_config"].append(4)
+print(config._default_dict)  # -> {'list_in_default_config': [1, 2, 3]}
+print(config._user_dict)  # -> {'list_in_default_config': [1, 2, 3, 4]}
