@@ -52,9 +52,12 @@ class Config:
         return len(set(self._user_dict).union(set(self._default_dict)))
 
     def __setitem__(self, key, value):
+        # Will fail for values unsupported by JSON.
+        json.dumps({key: value})
         self._user_dict[key] = value
 
     def default_keys(self):
+        """Get only the keys present in the default config."""
         return self._default_dict.keys()
 
     def get(self, key, default=None):
@@ -68,10 +71,15 @@ class Config:
             return default
 
     def get_default(self, key):
+        """Get the default value of the given setting, even if there is
+        a user setting.
+        """
         return self._default_dict[key]
 
     def keys(self):
-        return list(set(self._user_dict.keys()).union(self._default_dict.keys()))
+        """Get the keys present in the config."""
+        return list(
+            set(self._user_dict.keys()).union(self._default_dict.keys()))
 
     def load(self):
         """Load or reload config settings from the backing JSON files.

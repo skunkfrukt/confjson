@@ -140,20 +140,15 @@ def test_add_item_to_list_present_in_both_configs(tmpdir):
     _generate_both_config_files(tmpdir)
     conf = confjson.Config(tmpdir)
     conf["list_in_both"].append("new_item")
-    assert (
-        conf["list_in_both"] == USER_CONFIG["list_in_both"] +
-        ["new_item"])
-    assert (
-        conf.get_default("list_in_both") == DEFAULT_CONFIG["list_in_both"])
+    assert (conf["list_in_both"] == USER_CONFIG["list_in_both"] + ["new_item"])
+    assert (conf.get_default("list_in_both") == DEFAULT_CONFIG["list_in_both"])
 
 
 def test_add_item_to_list_present_only_in_user_config(tmpdir):
     _generate_both_config_files(tmpdir)
     conf = confjson.Config(tmpdir)
     conf["list_in_user"].append("new_item")
-    assert (
-        conf["list_in_user"] == USER_CONFIG["list_in_user"] +
-        ["new_item"])
+    assert (conf["list_in_user"] == USER_CONFIG["list_in_user"] + ["new_item"])
     with pytest.raises(KeyError):
         conf.get_default("list_in_user")
 
@@ -163,8 +158,8 @@ def test_add_item_to_list_present_only_in_default_config(tmpdir):
     conf = confjson.Config(tmpdir)
     conf["list_in_default"].append("new_item")
     assert (
-        conf["list_in_default"] == DEFAULT_CONFIG["list_in_default"]
-        + ["new_item"])
+        conf["list_in_default"] == DEFAULT_CONFIG["list_in_default"] +
+        ["new_item"])
     assert (
         conf.get_default("list_in_default") ==
         DEFAULT_CONFIG["list_in_default"])
@@ -273,3 +268,42 @@ def test_access_nested_dicts_missing_in_user_but_present_in_default(tmpdir):
     assert (
         conf["dict_in_both"]["key_in_default"] ==
         DEFAULT_CONFIG["dict_in_both"]["key_in_default"])
+
+
+#yapf: disable
+@pytest.mark.parametrize("value", [
+    pytest.param({"a": 1, "b": 2, "c": 3}, id="dict"),
+    pytest.param({"a": 1, "b": {"c": 2, "d": 3}}, id="nested dict"),
+    pytest.param([1, 2, 3, 4], id="list"),
+    pytest.param([1, [2, [3, [4]]]], id="nested list"),
+    pytest.param((6, 7, 8, 9), id="tuple"),
+    pytest.param((6, (7, (8, 9))), id="nested tuple"),
+    pytest.param("krafs", id="str"),
+    pytest.param(42, id="int"),
+    pytest.param(3.1415926536, id="float"),
+    pytest.param(True, id="True"),
+    pytest.param(False, id="False"),
+    pytest.param(None, id="None"),
+])
+#yapf: enable
+def test_allow_json_compatible_values(tmpdir, value):
+    conf = confjson.Config(tmpdir)
+    conf["thing"] = value
+    assert conf["thing"] == value
+
+
+#yapf: disable
+@pytest.mark.parametrize(
+    "value", [
+        pytest.param(confjson.Config, id="class"),
+        pytest.param(object(), id="object"),
+        pytest.param(set(), id="set"),
+        pytest.param([set()], id="set inside list"),
+        pytest.param({object(): "wtf"}, id="object as key"),
+        pytest.param({tuple(): "wtf"}, id="tuple as key"),
+    ])
+#yapf: enable
+def test_disallow_json_incompatible_values(tmpdir, value):
+    conf = confjson.Config(tmpdir)
+    with pytest.raises(TypeError):
+        conf["thing"] = value
