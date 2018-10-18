@@ -140,21 +140,17 @@ def test_add_item_to_list_present_in_both_configs(tmpdir):
     _generate_both_config_files(tmpdir)
     conf = confjson.Config(tmpdir)
     conf["list_in_both"].append("new_item")
-    assert (
-        conf._user_dict["list_in_both"] == USER_CONFIG["list_in_both"] +
-        ["new_item"])
-    assert (
-        conf._default_dict["list_in_both"] == DEFAULT_CONFIG["list_in_both"])
+    assert (conf["list_in_both"] == USER_CONFIG["list_in_both"] + ["new_item"])
+    assert (conf.get_default("list_in_both") == DEFAULT_CONFIG["list_in_both"])
 
 
 def test_add_item_to_list_present_only_in_user_config(tmpdir):
     _generate_both_config_files(tmpdir)
     conf = confjson.Config(tmpdir)
     conf["list_in_user"].append("new_item")
-    assert (
-        conf._user_dict["list_in_user"] == USER_CONFIG["list_in_user"] +
-        ["new_item"])
-    assert "list_in_user" not in conf._default_dict
+    assert (conf["list_in_user"] == USER_CONFIG["list_in_user"] + ["new_item"])
+    with pytest.raises(KeyError):
+        conf.get_default("list_in_user")
 
 
 def test_add_item_to_list_present_only_in_default_config(tmpdir):
@@ -162,10 +158,10 @@ def test_add_item_to_list_present_only_in_default_config(tmpdir):
     conf = confjson.Config(tmpdir)
     conf["list_in_default"].append("new_item")
     assert (
-        conf._user_dict["list_in_default"] == DEFAULT_CONFIG["list_in_default"]
-        + ["new_item"])
+        conf["list_in_default"] == DEFAULT_CONFIG["list_in_default"] +
+        ["new_item"])
     assert (
-        conf._default_dict["list_in_default"] ==
+        conf.get_default("list_in_default") ==
         DEFAULT_CONFIG["list_in_default"])
 
 
@@ -197,25 +193,26 @@ def test_add_item_to_dict_present_in_both_configs(tmpdir):
     _generate_both_config_files(tmpdir)
     conf = confjson.Config(tmpdir)
     conf["dict_in_both"]["new_key"] = "new_value"
-    assert conf._user_dict["dict_in_both"]["new_key"] == "new_value"
-    assert "new_key" not in conf._default_dict["dict_in_both"]
+    assert conf["dict_in_both"]["new_key"] == "new_value"
+    assert "new_key" not in conf.get_default("dict_in_both")
 
 
 def test_add_item_to_dict_present_only_in_user_config(tmpdir):
     _generate_both_config_files(tmpdir)
     conf = confjson.Config(tmpdir)
     conf["dict_in_user"]["new_key"] = "new_value"
-    assert conf._user_dict["dict_in_user"]["new_key"] == "new_value"
-    assert "dict_in_user" not in conf._default_dict
+    assert conf["dict_in_user"]["new_key"] == "new_value"
+    with pytest.raises(KeyError):
+        conf.get_default("dict_in_user")
 
 
 def test_add_item_to_dict_present_only_in_default_config(tmpdir):
     _generate_both_config_files(tmpdir)
     conf = confjson.Config(tmpdir)
     conf["dict_in_default"]["new_key"] = "new_value"
-    assert conf._user_dict["dict_in_default"]["new_key"] == "new_value"
+    assert conf["dict_in_default"]["new_key"] == "new_value"
     assert (
-        conf._default_dict["dict_in_default"] ==
+        conf.get_default("dict_in_default") ==
         DEFAULT_CONFIG["dict_in_default"])
 
 
@@ -241,7 +238,13 @@ def test_remove_items_from_user_config_if_identical_to_default_config(tmpdir):
 def test_delete_user_config_file_on_save_if_identical_to_default(tmpdir):
     _generate_both_config_files(tmpdir)
     conf = confjson.Config(tmpdir)
-    conf._user_dict = json.loads(json.dumps(conf._default_dict))
+    all_keys = conf.keys()
+    default_keys = conf.default_keys()
+    for key in all_keys:
+        if key in default_keys:
+            conf[key] = conf.get_default(key)
+        else:
+            del conf[key]
     assert conf.user_config_path.exists()
     conf.save()
     assert not conf.user_config_path.exists()
@@ -384,3 +387,62 @@ def test_set_default_nested_dict_as_attribute(tmpdir):
     conf = confjson.Config(tmpdir)
     conf.dict_in_both.key_in_default = "new_value"
     assert ("new_value" == conf["dict_in_both"]["key_in_default"])
+
+
+def test_save_only_changed_items_in_nested_dicts(tmpdir):
+    _generate_both_config_files(tmpdir)
+    conf = confjson.Config(tmpdir)
+    conf["dict_in_default"]["key_added_to_user"] = "krafs"
+    conf.save()
+    with conf.user_config_path.open() as file:
+        user_json = json.load(file)
+    assert "dict_in_default" in user_json
+    assert len(user_json["dict_in_default"]) == 1
+    assert user_json["dict_in_default"]["key_added_to_user"] == "krafs"
+
+
+def test_access_nested_dicts_missing_in_user_but_present_in_default(tmpdir):
+    _generate_both_config_files(tmpdir)
+    conf = confjson.Config(tmpdir)
+    assert (
+        conf["dict_in_both"]["key_in_default"] ==
+        DEFAULT_CONFIG["dict_in_both"]["key_in_default"])
+
+
+#yapf: disable
+@pytest.mark.parametrize("value", [
+    pytest.param({"a": 1, "b": 2, "c": 3}, id="dict"),
+    pytest.param({"a": 1, "b": {"c": 2, "d": 3}}, id="nested dict"),
+    pytest.param([1, 2, 3, 4], id="list"),
+    pytest.param([1, [2, [3, [4]]]], id="nested list"),
+    pytest.param((6, 7, 8, 9), id="tuple"),
+    pytest.param((6, (7, (8, 9))), id="nested tuple"),
+    pytest.param("krafs", id="str"),
+    pytest.param(42, id="int"),
+    pytest.param(3.1415926536, id="float"),
+    pytest.param(True, id="True"),
+    pytest.param(False, id="False"),
+    pytest.param(None, id="None"),
+])
+#yapf: enable
+def test_allow_json_compatible_values(tmpdir, value):
+    conf = confjson.Config(tmpdir)
+    conf["thing"] = value
+    assert conf["thing"] == value
+
+
+#yapf: disable
+@pytest.mark.parametrize(
+    "value", [
+        pytest.param(confjson.Config, id="class"),
+        pytest.param(object(), id="object"),
+        pytest.param(set(), id="set"),
+        pytest.param([set()], id="set inside list"),
+        pytest.param({object(): "wtf"}, id="object as key"),
+        pytest.param({tuple(): "wtf"}, id="tuple as key"),
+    ])
+#yapf: enable
+def test_disallow_json_incompatible_values(tmpdir, value):
+    conf = confjson.Config(tmpdir)
+    with pytest.raises(TypeError):
+        conf["thing"] = value
