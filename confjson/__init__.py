@@ -39,14 +39,23 @@ class Config:
     def __contains__(self, key):
         return key in self._user_dict or key in self._default_dict
 
+    def __delitem__(self, key):
+        del self._user_dict[key]
+
     def __getitem__(self, key):
         if key not in self._user_dict:
             default_value = self._default_dict[key]
             self._user_dict[key] = json.loads(json.dumps(default_value))
         return self._user_dict[key]
 
+    def __len__(self):
+        return len(set(self._user_dict).union(set(self._default_dict)))
+
     def __setitem__(self, key, value):
         self._user_dict[key] = value
+
+    def default_keys(self):
+        return self._default_dict.keys()
 
     def get(self, key, default=None):
         """Get the value of the given key from the user config, the
@@ -58,8 +67,11 @@ class Config:
         except KeyError:
             return default
 
-    def __len__(self):
-        return len(set(self._user_dict).union(set(self._default_dict)))
+    def get_default(self, key):
+        return self._default_dict[key]
+
+    def keys(self):
+        return list(set(self._user_dict.keys()).union(self._default_dict.keys()))
 
     def load(self):
         """Load or reload config settings from the backing JSON files.
