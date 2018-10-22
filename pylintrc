@@ -1,0 +1,4 @@
+[MESSAGES CONTROL]
+
+# Make pylint play nicely with black.
+disable=bad-continuation
