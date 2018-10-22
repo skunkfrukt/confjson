@@ -15,6 +15,7 @@ setuptools.setup(
     packages=setuptools.find_packages(),
     classifiers=[
         "Intended Audience :: Developers",
+        "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
         "License :: Public Domain",
         "Operating System :: OS Independent",
