@@ -1,5 +1,5 @@
 # confjson
-
+[![Build Status](https://travis-ci.org/skunkfrukt/confjson.svg?branch=master)](https://travis-ci.org/skunkfrukt/confjson)
 ## What is it?
 A bafflingly simple, JSON-backed configuration manager for Python programs.
 
