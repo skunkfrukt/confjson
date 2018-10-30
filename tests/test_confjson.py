@@ -456,3 +456,32 @@ def test_disallow_overwriting_original_attributes(tmpdir):
     conf = confjson.Config(tmpdir)
     with pytest.raises(KeyError):
         conf.keys = "better_keys"
+
+
+@pytest.mark.parametrize("key", ["string_in_default", "string_in_user"])
+def test_contains(tmpdir, key):
+    _generate_both_config_files(tmpdir)
+    conf = confjson.Config(tmpdir)
+    assert key in conf
+
+
+def test_len(tmpdir):
+    _generate_both_config_files(tmpdir)
+    conf = confjson.Config(tmpdir)
+    assert len(conf) == len(set(USER_CONFIG.keys()).union(DEFAULT_CONFIG.keys()))
+
+
+@pytest.mark.parametrize("key", ["string_in_default", "string_in_user"])
+def test_get_when_key_exists(tmpdir, key):
+    _generate_both_config_files(tmpdir)
+    conf = confjson.Config(tmpdir)
+    assert conf.get(key) == conf[key]
+
+
+def test_get_when_key_does_not_exist(tmpdir):
+    _generate_both_config_files(tmpdir)
+    conf = confjson.Config(tmpdir)
+    with pytest.raises(KeyError):
+        conf["key-does-not-exist"]
+    assert conf.get("key-does-not-exist") == None
+    assert conf.get("key-does-not-exist", "no-it-does-not") == "no-it-does-not"
