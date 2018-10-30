@@ -31,6 +31,10 @@ if "username" in config["user"]:
 	do_something(config["user"]["username"])
 	config["user"]["something_count"] += 1
 ```
+It is also possible to access items as attributes, *unless they share a name with a method of the Config class*.
+```python
+config.my_key = "my value"
+```
 
 ### Persistence
 The load() method (re-)loads the Config object with values from the backing JSON files. Loading is also performed on initialization, so this is mainly for discarding changes.

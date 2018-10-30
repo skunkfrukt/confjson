@@ -17,10 +17,15 @@ DEFAULT_CONFIG = {
     "dict_in_both": {
         "key_in_both": "d[dict_in_both][key_in_both]",
         "key_in_default": "d[dict_in_both][key_in_default]",
+        "nested_dict_in_both": {
+            "key_in_both": "d[dict_in_both][nested_dict_in_both][key_in_both]",
+            "key_in_default": "d[dict_in_both][nested_dict_in_both][key_in_default]",
+        },
     },
     "dict_in_default": {
         "key_d1": "d[dict_in_default][key_d1]",
         "key_d2": "d[dict_in_default][key_d2]",
+        "originally_empty_dict": {},
     },
 }
 
@@ -32,6 +37,10 @@ USER_CONFIG = {
     "dict_in_both": {
         "key_in_both": "u[dict_in_both][key_in_both]",
         "key_in_user": "u[dict_in_both][key_in_user]",
+        "nested_dict_in_both": {
+            "key_in_both": "u[dict_in_both][nested_dict_in_both][key_in_both]",
+            "key_in_user": "u[dict_in_both][nested_dict_in_both][key_in_user]",
+        },
     },
     "dict_in_user": {
         "key_u1": "u[dict_in_user][key_u1]",
@@ -285,8 +294,7 @@ def test_access_user_dict_as_attribute(tmpdir):
 def test_access_user_dict_overriding_default_as_attribute(tmpdir):
     _generate_both_config_files(tmpdir)
     conf = confjson.Config(tmpdir)
-    assert (
-        conf.dict_in_both.key_in_both == conf["dict_in_both"]["key_in_both"])
+    assert conf.dict_in_both.key_in_both == conf["dict_in_both"]["key_in_both"]
 
 
 def test_access_default_dict_as_attribute(tmpdir):
@@ -299,8 +307,9 @@ def test_access_default_nested_dict_as_attribute(tmpdir):
     _generate_both_config_files(tmpdir)
     conf = confjson.Config(tmpdir)
     assert (
-        conf.dict_in_both.key_in_default == conf["dict_in_both"]
-        ["key_in_default"])
+        conf.dict_in_both.nested_dict_in_both.key_in_default
+        == conf["dict_in_both"]["nested_dict_in_both"]["key_in_default"]
+    )
 
 
 def test_set_user_item_as_attribute(tmpdir):
@@ -362,7 +371,7 @@ def test_set_user_dict_overriding_default_as_attribute(tmpdir):
     _generate_both_config_files(tmpdir)
     conf = confjson.Config(tmpdir)
     conf.dict_in_both.key_in_both = "new_value"
-    assert ("new_value" == conf["dict_in_both"]["key_in_both"])
+    assert "new_value" == conf["dict_in_both"]["key_in_both"]
 
 
 def test_set_default_dict_as_attribute(tmpdir):
@@ -375,20 +384,23 @@ def test_set_default_dict_as_attribute(tmpdir):
 def test_set_default_nested_dict_as_attribute(tmpdir):
     _generate_both_config_files(tmpdir)
     conf = confjson.Config(tmpdir)
-    conf.dict_in_both.key_in_default = "new_value"
-    assert ("new_value" == conf["dict_in_both"]["key_in_default"])
+    conf.dict_in_both.nested_dict_in_both.key_in_default = "new_value"
+    assert "new_value" == conf["dict_in_both"]["nested_dict_in_both"]["key_in_default"]
 
 
 def test_save_only_changed_items_in_nested_dicts(tmpdir):
     _generate_both_config_files(tmpdir)
     conf = confjson.Config(tmpdir)
-    conf["dict_in_default"]["key_added_to_user"] = "krafs"
+    conf["dict_in_default"]["originally_empty_dict"]["key_added_to_user"] = "krafs"
     conf.save()
     with conf.user_config_path.open() as file:
         user_json = json.load(file)
     assert "dict_in_default" in user_json
-    assert len(user_json["dict_in_default"]) == 1
-    assert user_json["dict_in_default"]["key_added_to_user"] == "krafs"
+    assert len(user_json["dict_in_default"]["originally_empty_dict"]) == 1
+    assert (
+        user_json["dict_in_default"]["originally_empty_dict"]["key_added_to_user"]
+        == "krafs"
+    )
 
 
 def test_access_nested_dicts_missing_in_user_but_present_in_default(tmpdir):
@@ -438,3 +450,9 @@ def test_disallow_json_incompatible_values(tmpdir, value):
     conf = confjson.Config(tmpdir)
     with pytest.raises(TypeError):
         conf["thing"] = value
+
+
+def test_disallow_overwriting_original_attributes(tmpdir):
+    conf = confjson.Config(tmpdir)
+    with pytest.raises(KeyError):
+        conf.keys = "better_keys"

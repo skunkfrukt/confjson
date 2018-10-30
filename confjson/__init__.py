@@ -10,6 +10,22 @@ DEFAULT_CONFIG_FILENAME = "default.config.json"
 USER_CONFIG_FILENAME = "user.config.json"
 
 
+class ConfigItemProxy:
+    """Proxy object for attribute-style access to config items."""
+
+    def __init__(self, dict_):
+        super().__setattr__("_dict", dict_)
+
+    def __getattr__(self, key):
+        value = self._dict[key]
+        if isinstance(value, dict):
+            return ConfigItemProxy(value)
+        return value
+
+    def __setattr__(self, key, value):
+        self._dict[key] = value
+
+
 class Config:
     """A manager for JSON-backed default and user-specified config settings."""
 
@@ -17,9 +33,9 @@ class Config:
         pathlib_path = pathlib.Path(path)
 
         if pathlib_path.is_dir():
-            self.directory = pathlib_path
+            super().__setattr__("directory", pathlib_path)
         elif pathlib_path.is_file():
-            self.directory = pathlib_path.parent
+            super().__setattr__("directory", pathlib_path.parent)
         elif not pathlib_path.exists():
             raise ValueError(
                 "Parameter `path` must be the path of an existing file"
@@ -32,11 +48,13 @@ class Config:
                 " a directory."
             )
 
-        self.default_config_path = self.directory / DEFAULT_CONFIG_FILENAME
-        self.user_config_path = self.directory / USER_CONFIG_FILENAME
-
-        self._default_dict = {}
-        self._user_dict = {}
+        super().__setattr__(
+            "default_config_path", self.directory / DEFAULT_CONFIG_FILENAME
+        )
+        super().__setattr__("user_config_path", self.directory / USER_CONFIG_FILENAME)
+        super().__setattr__("_default_dict", {})
+        super().__setattr__("_user_dict", {})
+        super().__setattr__("_original_attrs", dir(self))
         self.load()
 
     def __contains__(self, key):
@@ -45,13 +63,27 @@ class Config:
     def __delitem__(self, key):
         del self._user_dict[key]
 
+    def __getattr__(self, key):
+        value = self[key]
+        if isinstance(value, dict):
+            return ConfigItemProxy(value)
+        return value
+
     def __getitem__(self, key):
         if key not in self._user_dict:
             self._user_dict[key] = copy.deepcopy(self._default_dict[key])
         return self._user_dict[key]
 
     def __len__(self):
-        return len(set(self._user_dict).union(set(self._default_dict)))
+        return len(self.keys())
+
+    def __setattr__(self, key, value):
+        if key in self._original_attrs:
+            raise KeyError(
+                "Cannot use attribute-style access to set config item '{key}';"
+                " attribute name is reserved."
+            )
+        self[key] = value
 
     def __setitem__(self, key, value):
         # Will fail for values unsupported by JSON.
@@ -88,15 +120,17 @@ class Config:
         """
         try:
             with self.default_config_path.open() as file:
-                self._default_dict = json.load(file)
+                super().__setattr__("_default_dict", json.load(file))
         except FileNotFoundError:
-            self._default_dict = {}
+            super().__setattr__("_default_dict", {})
 
         try:
             with self.user_config_path.open() as file:
-                self._user_dict = _get_dict_union(json.load(file), self._default_dict)
+                super().__setattr__(
+                    "_user_dict", _get_dict_union(json.load(file), self._default_dict)
+                )
         except FileNotFoundError:
-            self._user_dict = {}
+            super().__setattr__("_user_dict", {})
 
     def save(self):
         """Save any user config settings that differ from their
