@@ -21,8 +21,17 @@ class ConfigItemProxy:
         if isinstance(value, dict):
             return ConfigItemProxy(value)
         return value
+    
+    def __getitem__(self, key):
+        value = self._dict[key]
+        if isinstance(value, dict):
+            return ConfigItemProxy(value)
+        return value
 
     def __setattr__(self, key, value):
+        self._dict[key] = value
+        
+    def __setitem__(self, key, value):
         self._dict[key] = value
 
 
