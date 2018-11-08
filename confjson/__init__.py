@@ -53,7 +53,13 @@ class ConfigItemProxy:
 class Config:
     """A manager for JSON-backed default and user-specified config settings."""
 
-    def __init__(self, path):
+    def __init__(
+        self,
+        path,
+        *,
+        user_config_filename=USER_CONFIG_FILENAME,
+        default_config_filename=DEFAULT_CONFIG_FILENAME,
+    ):
         pathlib_path = pathlib.Path(path)
 
         if pathlib_path.is_dir():
@@ -67,9 +73,9 @@ class Config:
             super().__setattr__("directory", pathlib_path.parent)
 
         super().__setattr__(
-            "default_config_path", self.directory / DEFAULT_CONFIG_FILENAME
+            "default_config_path", self.directory / default_config_filename
         )
-        super().__setattr__("user_config_path", self.directory / USER_CONFIG_FILENAME)
+        super().__setattr__("user_config_path", self.directory / user_config_filename)
         super().__setattr__("_default_dict", {})
         super().__setattr__("_user_dict", {})
         super().__setattr__("_original_attrs", dir(self))

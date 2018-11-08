@@ -1,8 +1,9 @@
+# pylint: disable=missing-docstring
 import setuptools
 from confjson import VERSION
 
 with open("README.md", "r") as fh:
-    long_description = fh.read()
+    LONG_DESCRIPTION = fh.read()
 
 setuptools.setup(
     name="confjson",
@@ -10,7 +11,7 @@ setuptools.setup(
     author="Namida Aneskans",
     author_email="namida@skunkfrukt.se",
     description="A bafflingly simple, JSON-backed user configuration manager.",
-    long_description=long_description,
+    long_description=LONG_DESCRIPTION,
     long_description_content_type="text/markdown",
     url="https://github.com/skunkfrukt/confjson",
     packages=setuptools.find_packages(),
