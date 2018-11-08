@@ -6,6 +6,8 @@ import copy
 import json
 import pathlib
 
+VERSION = "1.2.1"
+
 DEFAULT_CONFIG_FILENAME = "default.config.json"
 USER_CONFIG_FILENAME = "user.config.json"
 
@@ -16,12 +18,19 @@ class ConfigItemProxy:
     def __init__(self, dict_):
         super().__setattr__("_dict", dict_)
 
+    def __eq__(self, other):
+        if isinstance(other, dict):
+            return self._dict == other
+        if isinstance(other, ConfigItemProxy):
+            return self._dict == other.get_dict()
+        return False
+
     def __getattr__(self, key):
         value = self._dict[key]
         if isinstance(value, dict):
             return ConfigItemProxy(value)
         return value
-    
+
     def __getitem__(self, key):
         value = self._dict[key]
         if isinstance(value, dict):
@@ -29,10 +38,16 @@ class ConfigItemProxy:
         return value
 
     def __setattr__(self, key, value):
+        json.dumps({key: value})
         self._dict[key] = value
-        
+
     def __setitem__(self, key, value):
+        json.dumps({key: value})
         self._dict[key] = value
+
+    def get_dict(self):
+        """Return the backing dict."""
+        return self._dict
 
 
 class Config:
@@ -43,19 +58,13 @@ class Config:
 
         if pathlib_path.is_dir():
             super().__setattr__("directory", pathlib_path)
-        elif pathlib_path.is_file():
-            super().__setattr__("directory", pathlib_path.parent)
         elif not pathlib_path.exists():
             raise ValueError(
                 "Parameter `path` must be the path of an existing file"
                 f" or directory; '{path}' does not exist."
             )
         else:
-            raise ValueError(
-                "Parameter `path` must be the path of an existing file"
-                f" or directory; '{path}' exists but is not a file or"
-                " a directory."
-            )
+            super().__setattr__("directory", pathlib_path.parent)
 
         super().__setattr__(
             "default_config_path", self.directory / DEFAULT_CONFIG_FILENAME
@@ -73,15 +82,15 @@ class Config:
         del self._user_dict[key]
 
     def __getattr__(self, key):
-        value = self[key]
-        if isinstance(value, dict):
-            return ConfigItemProxy(value)
-        return value
+        return self[key]
 
     def __getitem__(self, key):
         if key not in self._user_dict:
             self._user_dict[key] = copy.deepcopy(self._default_dict[key])
-        return self._user_dict[key]
+        value = self._user_dict[key]
+        if isinstance(value, dict):
+            return ConfigItemProxy(value)
+        return value
 
     def __len__(self):
         return len(self.keys())

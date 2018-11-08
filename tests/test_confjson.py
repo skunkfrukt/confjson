@@ -485,3 +485,40 @@ def test_get_when_key_does_not_exist(tmpdir):
         conf["key-does-not-exist"]
     assert conf.get("key-does-not-exist") == None
     assert conf.get("key-does-not-exist", "no-it-does-not") == "no-it-does-not"
+
+
+def test_dict_to_attr_mixed_style_access(tmpdir):
+    _generate_both_config_files(tmpdir)
+    conf = confjson.Config(tmpdir)
+    assert (
+        conf["dict_in_both"].key_in_both == USER_CONFIG["dict_in_both"]["key_in_both"]
+    )
+
+
+def test_attr_to_dict_mixed_style_access(tmpdir):
+    _generate_both_config_files(tmpdir)
+    conf = confjson.Config(tmpdir)
+    assert (
+        conf.dict_in_both["key_in_both"] == USER_CONFIG["dict_in_both"]["key_in_both"]
+    )
+
+
+def test_get_backing_dict(tmpdir):
+    _generate_both_config_files(tmpdir)
+    conf = confjson.Config(tmpdir)
+    backing_dict = conf.dict_in_user.get_dict()
+    assert isinstance(backing_dict, dict)
+    assert backing_dict == USER_CONFIG["dict_in_user"]
+
+
+def test_config_item_proxy_equality(tmpdir):
+    _generate_both_config_files(tmpdir)
+    con = confjson.Config(tmpdir)
+    fig = confjson.Config(tmpdir)
+    assert con.dict_in_both == fig.dict_in_both
+
+
+def test_config_item_proxy_inequality_because_mindless_coverage_hunting_is_good(tmpdir):
+    _generate_both_config_files(tmpdir)
+    conf = confjson.Config(tmpdir)
+    assert conf.dict_in_both != json.dumps(conf.dict_in_both.get_dict())

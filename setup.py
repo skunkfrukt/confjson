@@ -1,11 +1,12 @@
 import setuptools
+from confjson import VERSION
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
     name="confjson",
-    version="1.2.0",
+    version=VERSION,
     author="Namida Aneskans",
     author_email="namida@skunkfrukt.se",
     description="A bafflingly simple, JSON-backed user configuration manager.",

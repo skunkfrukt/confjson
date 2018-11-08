@@ -46,23 +46,21 @@ The save() method saves any changed or added items **to user.config.json only**.
 config.save()
 ```
 
-### collections.ChainMap comparison
-```python
-import collections
-import confjson
+## Version history
 
-chain_map = collections.ChainMap({}, {"list_in_second_dict": [1, 2, 3]})
-print(chain_map.maps[1])  # -> {'list_in_second_dict': [1, 2, 3]}
-print(chain_map.maps[0])  # -> {}
-chain_map["list_in_second_dict"].append(4)
-print(chain_map.maps[1])  # -> {'list_in_second_dict': [1, 2, 3, 4]}
-print(chain_map.maps[0])  # -> {}
+### 1.2.1
+* Improved attribute-style access and enabled mixed style access.
 
-# Assuming that our default.config.json contains
-# {"list_in_default_config": [1, 2, 3]}
-config = confjson.Config(__file__)
-print(config._default_dict)  # -> {'list_in_default_config': [1, 2, 3]}
-print(config._user_dict)  # -> {}
-config["list_in_default_config"].append(4)
-print(config._default_dict)  # -> {'list_in_default_config': [1, 2, 3]}
-print(config._user_dict)  # -> {'list_in_default_config': [1, 2, 3, 4]}
+### 1.2.0
+* Enabled attribute-style access to config items.
+
+### 1.1.0
+* Fixed handling of nested dicts.
+* Added check to prevent insertion of JSON-incompatible values right away rather than fail on save.
+* Added some more dict-like dunder methods.
+
+### 1.0.1
+* Changed `__init__` to also load the config files.
+
+### 1.0.0
+* Initial release.
