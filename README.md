@@ -48,6 +48,9 @@ config.save()
 
 ## Version history
 
+### 1.2.2
+* Added `keys()`, `get(key, default)` and `__contains__(key)` to ConfigItemProxy to fix a few problems caused by the previous change.
+
 ### 1.2.1
 * Improved attribute-style access and enabled mixed style access.
 
