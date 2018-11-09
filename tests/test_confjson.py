@@ -522,3 +522,44 @@ def test_config_item_proxy_inequality_because_mindless_coverage_hunting_is_good(
     _generate_both_config_files(tmpdir)
     conf = confjson.Config(tmpdir)
     assert conf.dict_in_both != json.dumps(conf.dict_in_both.get_dict())
+
+
+@pytest.mark.parametrize("key", ["key_in_user", "key_in_default"])
+def test_nested_contains(tmpdir, key):
+    _generate_both_config_files(tmpdir)
+    conf = confjson.Config(tmpdir)
+    assert key in conf.dict_in_both
+
+
+@pytest.mark.parametrize("key", ["key_in_user", "key_in_default"])
+def test_nested_get_when_exists(tmpdir, key):
+    _generate_both_config_files(tmpdir)
+    conf = confjson.Config(tmpdir)
+    assert conf.dict_in_both.get(key) == conf.dict_in_both[key]
+
+
+def test_nested_get_when_notexists(tmpdir):
+    _generate_both_config_files(tmpdir)
+    conf = confjson.Config(tmpdir)
+    assert conf.dict_in_both.get("hubris") is None
+    assert conf.dict_in_both.get("snorlax", "pikachu") == "pikachu"
+
+
+def test_nested_keys(tmpdir):
+    _generate_both_config_files(tmpdir)
+    conf = confjson.Config(tmpdir)
+    assert set(conf.dict_in_both.keys()) == set(
+        USER_CONFIG["dict_in_both"].keys()
+    ).union(DEFAULT_CONFIG["dict_in_both"].keys())
+
+
+def test_nested_items(tmpdir):
+    _generate_both_config_files(tmpdir)
+    conf = confjson.Config(tmpdir)
+    assert len(tuple(conf.dict_in_both.items())) == len(
+        set(USER_CONFIG["dict_in_both"].keys()).union(
+            DEFAULT_CONFIG["dict_in_both"].keys()
+        )
+    )
+    for key, value in conf.dict_in_both.items():
+        assert conf["dict_in_both"][key] == value

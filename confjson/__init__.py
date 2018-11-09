@@ -6,7 +6,7 @@ import copy
 import json
 import pathlib
 
-VERSION = "1.2.1"
+VERSION = "1.2.2"
 
 DEFAULT_CONFIG_FILENAME = "default.config.json"
 USER_CONFIG_FILENAME = "user.config.json"
@@ -17,6 +17,9 @@ class ConfigItemProxy:
 
     def __init__(self, dict_):
         super().__setattr__("_dict", dict_)
+
+    def __contains__(self, key):
+        return key in self._dict.keys()
 
     def __eq__(self, other):
         if isinstance(other, dict):
@@ -45,9 +48,23 @@ class ConfigItemProxy:
         json.dumps({key: value})
         self._dict[key] = value
 
+    def get(self, key, default=None):
+        """Return the value corresponding to `key` if it exists, else `default`."""
+        if key in self:
+            return self[key]
+        return default
+
     def get_dict(self):
         """Return the backing dict."""
         return self._dict
+
+    def items(self):
+        """Return tuples consisting of every key-value pair in the ConfigItemProxy."""
+        return ((key, self[key]) for key in self.keys())
+
+    def keys(self):
+        """Return every key in the ConfigItemProxy."""
+        return self._dict.keys()
 
 
 class Config:
