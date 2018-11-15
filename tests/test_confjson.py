@@ -1,9 +1,11 @@
+# pylint: disable=missing-docstring
 import json
 import os.path
 
 import pytest
 
 import confjson
+
 
 DEFAULT_CONFIG_FILENAME = "default.config.json"
 
@@ -79,7 +81,7 @@ def test_init_with_directory_path(tmpdir):
 
 def test_init_with_nonexistant_file_path(tmpdir):
     with pytest.raises(ValueError):
-        conf = confjson.Config(os.path.join(tmpdir, "does_not_exist.wtf"))
+        _ = confjson.Config(os.path.join(tmpdir, "does_not_exist.wtf"))
 
 
 def test_create_user_config_file_if_missing(tmpdir):
@@ -237,7 +239,10 @@ def test_remove_items_from_user_config_if_identical_to_default_config(tmpdir):
 def test_delete_user_config_file_on_save_if_identical_to_default(tmpdir):
     _generate_both_config_files(tmpdir)
     conf = confjson.Config(tmpdir)
+    # This is callable. Shut up.
+    # pylint: disable=not-callable
     all_keys = conf.keys()
+    # pylint: enable=not-callable
     default_keys = conf.default_keys()
     for key in all_keys:
         if key in default_keys:
@@ -316,21 +321,21 @@ def test_set_user_item_as_attribute(tmpdir):
     _generate_both_config_files(tmpdir)
     conf = confjson.Config(tmpdir)
     conf.string_in_user = "new_value"
-    assert "new_value" == conf["string_in_user"]
+    assert conf["string_in_user"] == "new_value"
 
 
 def test_set_user_item_overriding_default_as_attribute(tmpdir):
     _generate_both_config_files(tmpdir)
     conf = confjson.Config(tmpdir)
     conf.string_in_both = "new_value"
-    assert "new_value" == conf["string_in_both"]
+    assert conf["string_in_both"] == "new_value"
 
 
 def test_set_default_item_as_attribute(tmpdir):
     _generate_both_config_files(tmpdir)
     conf = confjson.Config(tmpdir)
     conf.string_in_default = "new_value"
-    assert "new_value" == conf["string_in_default"]
+    assert conf["string_in_default"] == "new_value"
 
 
 def test_set_user_list_as_attribute(tmpdir):
@@ -338,8 +343,8 @@ def test_set_user_list_as_attribute(tmpdir):
     conf = confjson.Config(tmpdir)
     conf.list_in_user[0] = "new_value_0"
     conf.list_in_user.append("new_value_-1")
-    assert "new_value_0" == conf["list_in_user"][0]
-    assert "new_value_-1" == conf["list_in_user"][-1]
+    assert conf["list_in_user"][0] == "new_value_0"
+    assert conf["list_in_user"][-1] == "new_value_-1"
 
 
 def test_set_user_list_overriding_default_as_attribute(tmpdir):
@@ -347,8 +352,8 @@ def test_set_user_list_overriding_default_as_attribute(tmpdir):
     conf = confjson.Config(tmpdir)
     conf.list_in_both[0] = "new_value_0"
     conf.list_in_both.append("new_value_-1")
-    assert "new_value_0" == conf["list_in_both"][0]
-    assert "new_value_-1" == conf["list_in_both"][-1]
+    assert conf["list_in_both"][0] == "new_value_0"
+    assert conf["list_in_both"][-1] == "new_value_-1"
 
 
 def test_set_default_list_as_attribute(tmpdir):
@@ -356,36 +361,36 @@ def test_set_default_list_as_attribute(tmpdir):
     conf = confjson.Config(tmpdir)
     conf.list_in_default[0] = "new_value_0"
     conf.list_in_default.append("new_value_-1")
-    assert "new_value_0" == conf["list_in_default"][0]
-    assert "new_value_-1" == conf["list_in_default"][-1]
+    assert conf["list_in_default"][0] == "new_value_0"
+    assert conf["list_in_default"][-1] == "new_value_-1"
 
 
 def test_set_user_dict_as_attribute(tmpdir):
     _generate_both_config_files(tmpdir)
     conf = confjson.Config(tmpdir)
     conf.dict_in_user.key_u1 = "new_value"
-    assert "new_value" == conf["dict_in_user"]["key_u1"]
+    assert conf["dict_in_user"]["key_u1"] == "new_value"
 
 
 def test_set_user_dict_overriding_default_as_attribute(tmpdir):
     _generate_both_config_files(tmpdir)
     conf = confjson.Config(tmpdir)
     conf.dict_in_both.key_in_both = "new_value"
-    assert "new_value" == conf["dict_in_both"]["key_in_both"]
+    assert conf["dict_in_both"]["key_in_both"] == "new_value"
 
 
 def test_set_default_dict_as_attribute(tmpdir):
     _generate_both_config_files(tmpdir)
     conf = confjson.Config(tmpdir)
     conf.dict_in_default.key_d1 = "new_value"
-    assert "new_value" == conf["dict_in_default"]["key_d1"]
+    assert conf["dict_in_default"]["key_d1"] == "new_value"
 
 
 def test_set_default_nested_dict_as_attribute(tmpdir):
     _generate_both_config_files(tmpdir)
     conf = confjson.Config(tmpdir)
     conf.dict_in_both.nested_dict_in_both.key_in_default = "new_value"
-    assert "new_value" == conf["dict_in_both"]["nested_dict_in_both"]["key_in_default"]
+    assert conf["dict_in_both"]["nested_dict_in_both"]["key_in_default"] == "new_value"
 
 
 def test_save_only_changed_items_in_nested_dicts(tmpdir):
@@ -482,8 +487,8 @@ def test_get_when_key_does_not_exist(tmpdir):
     _generate_both_config_files(tmpdir)
     conf = confjson.Config(tmpdir)
     with pytest.raises(KeyError):
-        conf["key-does-not-exist"]
-    assert conf.get("key-does-not-exist") == None
+        _ = conf["key-does-not-exist"]
+    assert conf.get("key-does-not-exist") is None
     assert conf.get("key-does-not-exist", "no-it-does-not") == "no-it-does-not"
 
 
@@ -563,3 +568,83 @@ def test_nested_items(tmpdir):
     )
     for key, value in conf.dict_in_both.items():
         assert conf["dict_in_both"][key] == value
+
+
+def test_placeholder_equality(tmpdir):
+    _generate_both_config_files(tmpdir)
+    conf = confjson.Config(tmpdir, use_placeholders=True)
+    assert conf.does_not_exist != "krafs"
+
+
+def test_placeholder_getattr(tmpdir):
+    _generate_both_config_files(tmpdir)
+    conf = confjson.Config(tmpdir, use_placeholders=True)
+    assert not conf.does_not_exist.not_at_all
+    assert conf.does_not_exist.is_placeholder
+
+
+def test_placeholder_getitem(tmpdir):
+    _generate_both_config_files(tmpdir)
+    conf = confjson.Config(tmpdir, use_placeholders=True)
+    assert not conf["does_not_exist"]["not_at_all"]
+    assert conf["does_not_exist"].is_placeholder
+
+
+def test_getattr_unsuppressed_key_error(tmpdir):
+    _generate_both_config_files(tmpdir)
+    conf = confjson.Config(tmpdir, use_placeholders=False)
+    with pytest.raises(KeyError):
+        _ = conf.dict_in_both.does_not_exist
+
+
+def test_getattr_suppressed_key_error(tmpdir):
+    _generate_both_config_files(tmpdir)
+    conf = confjson.Config(tmpdir, use_placeholders=True)
+    assert conf.dict_in_both.does_not_exist.is_placeholder
+
+
+def test_getitem_unsuppressed_key_error(tmpdir):
+    _generate_both_config_files(tmpdir)
+    conf = confjson.Config(tmpdir, use_placeholders=False)
+    with pytest.raises(KeyError):
+        _ = conf["dict_in_both"]["does_not_exist"]
+
+
+def test_getitem_suppressed_key_error(tmpdir):
+    _generate_both_config_files(tmpdir)
+    conf = confjson.Config(tmpdir, use_placeholders=True)
+    assert conf["dict_in_both"]["does_not_exist"].is_placeholder
+
+
+def test_placeholder_setattr(tmpdir):
+    _generate_both_config_files(tmpdir)
+    conf = confjson.Config(tmpdir, use_placeholders=True)
+    assert conf.fake_dict.is_placeholder
+    assert conf.fake_dict.fake_key.is_placeholder
+    assert conf.fake_dict.fake_key.fake_subkey.is_placeholder
+    conf.fake_dict.fake_key.fake_subkey = "so fake ._. wow"
+    assert not conf.fake_dict.is_placeholder
+    assert not conf.fake_dict.fake_key.is_placeholder
+    assert conf.fake_dict.fake_key.fake_subkey == "so fake ._. wow"
+    conf.save()
+    igur = confjson.Config(tmpdir, use_placeholders=False)
+    assert not igur.fake_dict.is_placeholder
+    assert not igur.fake_dict.fake_key.is_placeholder
+    assert igur.fake_dict.fake_key.fake_subkey == "so fake ._. wow"
+
+
+def test_placeholder_setitem(tmpdir):
+    _generate_both_config_files(tmpdir)
+    conf = confjson.Config(tmpdir, use_placeholders=True)
+    assert conf["fake_dict"].is_placeholder
+    assert conf["fake_dict"]["fake_key"].is_placeholder
+    assert conf["fake_dict"]["fake_key"]["fake_subkey"].is_placeholder
+    conf["fake_dict"]["fake_key"]["fake_subkey"] = "._. much placeholder"
+    assert not conf["fake_dict"].is_placeholder
+    assert not conf["fake_dict"]["fake_key"].is_placeholder
+    assert conf["fake_dict"]["fake_key"]["fake_subkey"] == "._. much placeholder"
+    conf.save()
+    igur = confjson.Config(tmpdir, use_placeholders=False)
+    assert not igur["fake_dict"].is_placeholder
+    assert not igur["fake_dict"]["fake_key"].is_placeholder
+    assert igur["fake_dict"]["fake_key"]["fake_subkey"] == "._. much placeholder"

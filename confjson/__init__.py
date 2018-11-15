@@ -1,51 +1,88 @@
-"""confjson
-A bafflingly simple, JSON-backend configuration manager for python programs.
-"""
+"""A bafflingly simple, JSON-backend configuration manager for python programs."""
+__version__ = "1.3.0"
+
 
 import copy
 import json
 import pathlib
 
-VERSION = "1.2.2"
 
 DEFAULT_CONFIG_FILENAME = "default.config.json"
 USER_CONFIG_FILENAME = "user.config.json"
 
 
-class ConfigItemProxy:
+class _ConfigItemProxy:
     """Proxy object for attribute-style access to config items."""
 
-    def __init__(self, dict_):
+    def __init__(
+        self,
+        dict_,
+        use_placeholders=False,
+        placeholder_parent=None,
+        placeholder_key=None,
+    ):
         super().__setattr__("_dict", dict_)
+        super().__setattr__("_use_placeholders", use_placeholders)
+        super().__setattr__("_placeholder_parent", placeholder_parent)
+        super().__setattr__("_placeholder_key", placeholder_key)
+
+    def __bool__(self):
+        return bool(self._dict)
 
     def __contains__(self, key):
         return key in self._dict.keys()
 
     def __eq__(self, other):
+        if self._dict is None:
+            return False
         if isinstance(other, dict):
             return self._dict == other
-        if isinstance(other, ConfigItemProxy):
+        if isinstance(other, _ConfigItemProxy):
             return self._dict == other.get_dict()
         return False
 
     def __getattr__(self, key):
-        value = self._dict[key]
-        if isinstance(value, dict):
-            return ConfigItemProxy(value)
-        return value
+        if self._dict is None:
+            return _ConfigItemProxy(None, True, self, key)
+        try:
+            value = self._dict[key]
+            if isinstance(value, dict):
+                return _ConfigItemProxy(value, self._use_placeholders)
+            return value
+        except KeyError:
+            if self._use_placeholders:
+                return _ConfigItemProxy(None, True, self, key)
+            raise
 
     def __getitem__(self, key):
-        value = self._dict[key]
-        if isinstance(value, dict):
-            return ConfigItemProxy(value)
-        return value
+        if self._dict is None:
+            return _ConfigItemProxy(None, True, self, key)
+        try:
+            value = self._dict[key]
+            if isinstance(value, dict):
+                return _ConfigItemProxy(value, self._use_placeholders)
+            return value
+        except KeyError:
+            if self._use_placeholders:
+                return _ConfigItemProxy(None, True, self, key)
+            raise
 
     def __setattr__(self, key, value):
         json.dumps({key: value})
+        if self._dict is None:
+            super().__setattr__("_dict", {})
+            self._placeholder_parent[self._placeholder_key] = self._dict
+            super().__setattr__("_placeholder_parent", None)
+            super().__setattr__("_placeholder_key", None)
         self._dict[key] = value
 
     def __setitem__(self, key, value):
         json.dumps({key: value})
+        if self._dict is None:
+            super().__setattr__("_dict", {})
+            self._placeholder_parent[self._placeholder_key] = self._dict
+            super().__setattr__("_placeholder_parent", None)
+            super().__setattr__("_placeholder_key", None)
         self._dict[key] = value
 
     def get(self, key, default=None):
@@ -66,11 +103,23 @@ class ConfigItemProxy:
         """Return every key in the ConfigItemProxy."""
         return self._dict.keys()
 
+    @property
+    def is_placeholder(self):
+        """Return True if object is a placeholder for a nonexistent dict item."""
+        return self._dict is None
+
 
 class Config:
     """A manager for JSON-backed default and user-specified config settings."""
 
-    def __init__(self, path):
+    def __init__(
+        self,
+        path,
+        *,
+        user_config_filename=USER_CONFIG_FILENAME,
+        default_config_filename=DEFAULT_CONFIG_FILENAME,
+        use_placeholders=False,
+    ):
         pathlib_path = pathlib.Path(path)
 
         if pathlib_path.is_dir():
@@ -84,12 +133,13 @@ class Config:
             super().__setattr__("directory", pathlib_path.parent)
 
         super().__setattr__(
-            "default_config_path", self.directory / DEFAULT_CONFIG_FILENAME
+            "default_config_path", self.directory / default_config_filename
         )
-        super().__setattr__("user_config_path", self.directory / USER_CONFIG_FILENAME)
+        super().__setattr__("user_config_path", self.directory / user_config_filename)
         super().__setattr__("_default_dict", {})
         super().__setattr__("_user_dict", {})
         super().__setattr__("_original_attrs", dir(self))
+        super().__setattr__("_use_placeholders", use_placeholders)
         self.load()
 
     def __contains__(self, key):
@@ -102,12 +152,17 @@ class Config:
         return self[key]
 
     def __getitem__(self, key):
-        if key not in self._user_dict:
-            self._user_dict[key] = copy.deepcopy(self._default_dict[key])
-        value = self._user_dict[key]
-        if isinstance(value, dict):
-            return ConfigItemProxy(value)
-        return value
+        try:
+            if key not in self._user_dict:
+                self._user_dict[key] = copy.deepcopy(self._default_dict[key])
+            value = self._user_dict[key]
+            if isinstance(value, dict):
+                return _ConfigItemProxy(value, self._use_placeholders)
+            return value
+        except KeyError:
+            if self._use_placeholders:
+                return _ConfigItemProxy(None, True, self, key)
+            raise
 
     def __len__(self):
         return len(self.keys())

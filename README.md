@@ -17,11 +17,18 @@ The `confjson.Config` class is similar to a ChainMap, and works by means of two 
   - If the file does not exist, it will be created when changes are saved.
   - User settings take priority over default settings.
   - This file should probably be added to .gitignore or such.
+The names of both files are configurable. The above names are the defaults.
 
 ### Initialization
-The path given when initializing the Config object can be either a directory or a file. If it refers to a file, confjson will look for config files in the containing directory. The reason for this is that it enables the following pattern, using `__file__` to find config files in the same directory as the program.
+The path given when initializing the Config object can be either a directory or a file. If it refers to a file, confjson will look for config files in the containing directory. The reason for this is that it enables the pattern of using `__file__` to find config files in the same directory as the program.
 ```python
 config = confjson.Config(__file__)
+config = confjson.Config(".")
+config = confjson.Config(
+	"./configs",
+	user_config_filename=f"{os.getenv('username')}.cfg",
+	default_config_filename="global.cfg",
+)
 ```
 
 ### Data access
@@ -47,6 +54,10 @@ config.save()
 ```
 
 ## Version history
+
+### 1.3.0
+* Made filenames of both user.config.json and default.config.json configurable.
+* Added `use_placeholders` argument to Config class. When True, doesn't raise KeyError on attempted access to a nonexistent key, instead returning a placeholder. Assignments of keys to a placeholder will propagate up through the hierarchy and add real dicts as needed.
 
 ### 1.2.2
 * Added `keys()`, `get(key, default)` and `__contains__(key)` to ConfigItemProxy to fix a few problems caused by the previous change.

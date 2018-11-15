@@ -1,0 +1,15 @@
+[run]
+branch = True
+source =
+	confjson/
+	tests/
+omit =
+	*/__main__.py
+	setup.py
+
+[report]
+exclude_lines =
+	if (?:0|False):
+	if __name__ == ["']__main__['"]:
+show_missing = True
+fail_under = 100
