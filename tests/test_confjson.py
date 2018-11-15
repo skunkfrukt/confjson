@@ -527,3 +527,83 @@ def test_config_item_proxy_inequality_because_mindless_coverage_hunting_is_good(
     _generate_both_config_files(tmpdir)
     conf = confjson.Config(tmpdir)
     assert conf.dict_in_both != json.dumps(conf.dict_in_both.get_dict())
+
+
+def test_placeholder_equality(tmpdir):
+    _generate_both_config_files(tmpdir)
+    conf = confjson.Config(tmpdir, use_placeholders=True)
+    assert conf.does_not_exist != "krafs"
+
+
+def test_placeholder_getattr(tmpdir):
+    _generate_both_config_files(tmpdir)
+    conf = confjson.Config(tmpdir, use_placeholders=True)
+    assert not conf.does_not_exist.not_at_all
+    assert conf.does_not_exist.is_placeholder
+
+
+def test_placeholder_getitem(tmpdir):
+    _generate_both_config_files(tmpdir)
+    conf = confjson.Config(tmpdir, use_placeholders=True)
+    assert not conf["does_not_exist"]["not_at_all"]
+    assert conf["does_not_exist"].is_placeholder
+
+
+def test_getattr_unsuppressed_key_error(tmpdir):
+    _generate_both_config_files(tmpdir)
+    conf = confjson.Config(tmpdir, use_placeholders=False)
+    with pytest.raises(KeyError):
+        _ = conf.dict_in_both.does_not_exist
+
+
+def test_getattr_suppressed_key_error(tmpdir):
+    _generate_both_config_files(tmpdir)
+    conf = confjson.Config(tmpdir, use_placeholders=True)
+    assert conf.dict_in_both.does_not_exist.is_placeholder
+
+
+def test_getitem_unsuppressed_key_error(tmpdir):
+    _generate_both_config_files(tmpdir)
+    conf = confjson.Config(tmpdir, use_placeholders=False)
+    with pytest.raises(KeyError):
+        _ = conf["dict_in_both"]["does_not_exist"]
+
+
+def test_getitem_suppressed_key_error(tmpdir):
+    _generate_both_config_files(tmpdir)
+    conf = confjson.Config(tmpdir, use_placeholders=True)
+    assert conf["dict_in_both"]["does_not_exist"].is_placeholder
+
+
+def test_placeholder_setattr(tmpdir):
+    _generate_both_config_files(tmpdir)
+    conf = confjson.Config(tmpdir, use_placeholders=True)
+    assert conf.fake_dict.is_placeholder
+    assert conf.fake_dict.fake_key.is_placeholder
+    assert conf.fake_dict.fake_key.fake_subkey.is_placeholder
+    conf.fake_dict.fake_key.fake_subkey = "so fake ._. wow"
+    assert not conf.fake_dict.is_placeholder
+    assert not conf.fake_dict.fake_key.is_placeholder
+    assert conf.fake_dict.fake_key.fake_subkey == "so fake ._. wow"
+    conf.save()
+    igur = confjson.Config(tmpdir, use_placeholders=False)
+    assert not igur.fake_dict.is_placeholder
+    assert not igur.fake_dict.fake_key.is_placeholder
+    assert igur.fake_dict.fake_key.fake_subkey == "so fake ._. wow"
+
+
+def test_placeholder_setitem(tmpdir):
+    _generate_both_config_files(tmpdir)
+    conf = confjson.Config(tmpdir, use_placeholders=True)
+    assert conf["fake_dict"].is_placeholder
+    assert conf["fake_dict"]["fake_key"].is_placeholder
+    assert conf["fake_dict"]["fake_key"]["fake_subkey"].is_placeholder
+    conf["fake_dict"]["fake_key"]["fake_subkey"] = "._. much placeholder"
+    assert not conf["fake_dict"].is_placeholder
+    assert not conf["fake_dict"]["fake_key"].is_placeholder
+    assert conf["fake_dict"]["fake_key"]["fake_subkey"] == "._. much placeholder"
+    conf.save()
+    igur = confjson.Config(tmpdir, use_placeholders=False)
+    assert not igur["fake_dict"].is_placeholder
+    assert not igur["fake_dict"]["fake_key"].is_placeholder
+    assert igur["fake_dict"]["fake_key"]["fake_subkey"] == "._. much placeholder"
