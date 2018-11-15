@@ -1,12 +1,11 @@
-"""confjson
-A bafflingly simple, JSON-backend configuration manager for python programs.
-"""
+"""A bafflingly simple, JSON-backend configuration manager for python programs."""
+__version__ = "1.3.0"
+
 
 import copy
 import json
 import pathlib
 
-VERSION = "1.2.1"
 
 DEFAULT_CONFIG_FILENAME = "default.config.json"
 USER_CONFIG_FILENAME = "user.config.json"

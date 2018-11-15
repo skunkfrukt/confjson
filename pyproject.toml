@@ -1,0 +1,20 @@
+[build-system]
+requires = ["flit"]
+build-backend = "flit.buildapi"
+
+[tool.flit.metadata]
+module = "confjson"
+author = "Namida Aneskans"
+author-email = "namida@skunkfrukt.se"
+home-page = "https://github.com/skunkfrukt/confjson"
+
+requires-python = '>=3.6'
+
+description-file = 'README.md'
+classifiers = [
+	"Intended Audience :: Developers",
+    "Programming Language :: Python :: 3.6",
+    "Programming Language :: Python :: 3.7",
+    "License :: Public Domain",
+    "Operating System :: OS Independent",
+]
