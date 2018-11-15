@@ -17,6 +17,7 @@ The `confjson.Config` class is similar to a ChainMap, and works by means of two 
   - If the file does not exist, it will be created when changes are saved.
   - User settings take priority over default settings.
   - This file should probably be added to .gitignore or such.
+
 The names of both files are configurable. The above names are the defaults.
 
 ### Initialization
